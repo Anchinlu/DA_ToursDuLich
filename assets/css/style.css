@@ -1,0 +1,179 @@
+
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
+/* --- 1. CÀI ĐẶT CHUNG & KHÓA CUỘN --- */
+:root {
+    --primary-color: #0077B6; --primary-hover: #005885;
+    --text-dark: #1F2937; --text-gray: #4B5563; --text-light: #9CA3AF;
+    --bg-light: #F3F4F6; --white: #FFFFFF;
+    --error: #EF4444; --success: #059669;
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* QUAN TRỌNG: Khóa cuộn tuyệt đối cho cả HTML và BODY */
+html, body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-light);
+    height: 100vh !important; 
+    width: 100%;
+    overflow: hidden !important; /* Chặn thanh cuộn vĩnh viễn */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-dark);
+}
+
+/* --- 2. BỐ CỤC CHÍNH --- */
+.auth-container {
+    display: flex;
+    width: 100%; height: 100%;
+    background: var(--white);
+    animation: contentFadeIn 0.8s ease-out forwards;
+}
+
+/* --- 3. CỘT TRÁI (HERO) --- */
+.hero-section {
+    flex: 1; position: relative;
+    background-image: url('https://images.pexels.com/photos/4388164/pexels-photo-4388164.jpeg?auto=compress&cs=tinysrgb&w=800');
+    background-size: cover; background-position: center;
+    display: none;
+}
+
+.hero-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0) 100%);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 40px; color: var(--white);
+}
+
+.hero-stats {
+    display: flex; gap: 30px; margin-top: 30px;
+    border-top: 1px solid rgba(255,255,255,0.3); padding-top: 20px;
+}
+
+.stat-item { display: flex; align-items: center; gap: 12px; }
+.stat-icon {
+    width: 45px; height: 45px; background: rgba(255,255,255,0.2);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; backdrop-filter: blur(5px);
+}
+.stat-text strong { display: block; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.stat-text span { font-size: 14px; opacity: 0.8; }
+
+@media (min-width: 1024px) { .hero-section { display: flex; width: 50%; } .form-section { width: 50%; } }
+
+/* --- 4. CỘT PHẢI (FORM) --- */
+.form-section {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    padding: 40px; overflow-y: auto; /* Chỉ cuộn nội dung form */
+}
+.form-wrapper { max-width: 500px; margin: 0 auto; width: 100%; }
+
+h2 { font-size: 30px; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
+p.subtitle { color: var(--text-gray); margin-bottom: 30px; font-size: 16px; }
+
+/* --- 5. INPUTS --- */
+.row-grid { display: flex; gap: 15px; }
+.row-grid .input-group { flex: 1; margin-bottom: 15px; }
+.input-group { position: relative; margin-bottom: 20px; }
+
+.input-group input {
+    width: 100%; padding: 12px 12px 12px 40px;
+    border: 1px solid #E5E7EB; border-radius: 8px; font-size: 16px;
+    transition: all 0.3s; outline: none;
+}
+.input-group i.field-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 16px; }
+.toggle-password { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-light); }
+.input-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(0, 119, 182, 0.1); }
+
+.input-group label {
+    position: absolute; left: 40px; top: 50%; transform: translateY(-50%);
+    color: var(--text-light); transition: all 0.2s; pointer-events: none; font-size: 14px;
+}
+.input-group input:focus + label, .input-group input:not(:placeholder-shown) + label {
+    top: 0; left: 10px; padding: 0 5px; background-color: var(--white);
+    font-size: 12px; color: var(--primary-color); font-weight: 600;
+}
+.avatar-compact { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; font-size: 14px; border: 1px dashed #ccc; padding: 5px 10px; border-radius: 8px; }
+
+/* --- 6. BUTTONS & ALERTS --- */
+.btn-primary {
+    width: 100%; padding: 14px; background-color: var(--primary-color); color: var(--white);
+    border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: transform 0.2s, background 0.2s; box-shadow: var(--shadow-md);
+}
+.btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-2px); }
+.social-btn {
+    display: flex; align-items: center; justify-content: center; width: 100%; padding: 12px;
+    border: 1px solid #E5E7EB; border-radius: 8px; background: var(--white); font-weight: 500;
+    color: var(--text-dark); cursor: pointer; text-decoration: none; transition: all 0.2s; gap: 10px;
+}
+.social-btn:hover { background-color: #F9FAFB; border-color: #D1D5DB; }
+.social-btn img { width: 20px; height: 20px; }
+.link-primary { color: var(--primary-color); text-decoration: none; font-weight: 600; }
+.divider { display: flex; align-items: center; margin: 25px 0; color: var(--text-light); font-size: 14px; }
+.divider::before, .divider::after { content: ""; flex: 1; border-bottom: 1px solid #E5E7EB; }
+.alert { padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+.alert-error { background-color: #FEF2F2; color: var(--error); border: 1px solid #FECACA; }
+
+/* --- 7. HIỆU ỨNG CHUYỂN TRANG (WIPER TRANSITION) --- */
+
+/* Container nằm đè lên trên cùng */
+#wiper-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 9999; pointer-events: none;
+}
+
+/* Logo nằm giữa */
+.center-logo {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 10px;
+    z-index: 10001;
+    opacity: 0; /* Mặc định ẩn */
+}
+
+/* Các lớp màu */
+.wipe-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    transform: translateY(100%); 
+}
+.wipe-light { background-color: rgba(202, 240, 248, 0.7); z-index: 9998; }
+.wipe-dark { background: linear-gradient(to top, #0077B6, #023E8A); z-index: 9999; }
+
+/* --- LOGIC ANIMATION --- */
+
+/* 1. EXIT (Rời đi): Màn xanh lên -> Đợi tí -> Logo hiện */
+body.is-exiting .wipe-light {
+    animation: wipeUpEnter 0.5s cubic-bezier(0.8, 0, 0.1, 1) forwards;
+}
+body.is-exiting .wipe-dark {
+    animation: wipeUpEnter 0.5s cubic-bezier(0.8, 0, 0.1, 1) 0.05s forwards;
+}
+body.is-exiting .center-logo {
+    /* Delay 0.3s để màn xanh che được 1 đoạn rồi mới hiện logo */
+    animation: logoFadeIn 0.3s ease-out forwards;
+    animation-delay: 0.3s; 
+}
+
+/* 2. ENTER (Vào mới): Màn xanh bay tiếp -> Logo mờ dần */
+body.is-entering .wipe-light {
+    animation: wipeUpExit 0.8s cubic-bezier(0.8, 0, 0.1, 1) forwards;
+}
+body.is-entering .wipe-dark {
+    transform: translateY(0%); 
+    animation: wipeUpExit 0.8s cubic-bezier(0.8, 0, 0.1, 1) forwards;
+}
+body.is-entering .center-logo {
+    /* Mờ dần đi */
+    animation: logoFadeOut 0.5s ease-in forwards;
+}
+
+/* KEYFRAMES */
+@keyframes wipeUpEnter { from { transform: translateY(100%); } to { transform: translateY(0%); } }
+@keyframes wipeUpExit { from { transform: translateY(0%); } to { transform: translateY(-100%); } }
+@keyframes logoFadeIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+@keyframes logoFadeOut { from { opacity: 1; transform: translate(-50%, -50%) scale(1); } to { opacity: 0; transform: translate(-50%, -50%) scale(1.2); } }
+@keyframes contentFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
