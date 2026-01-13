@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Sửa đường dẫn config (đi lên thư mục cha vì file đang ở pages/)
 require_once '../config/db_connect.php';
 
 if (!isset($_SESSION['user_id'])) {
@@ -14,12 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $user_id = $_SESSION['user_id'];
 
     try {
-        // Kiểm tra đơn hàng
         $stmt = $db->prepare("SELECT id FROM DonDatTour WHERE id = ? AND idNguoiDung = ?");
         $stmt->execute([$order_id, $user_id]);
         
         if ($stmt->rowCount() > 0) {
-            // Cập nhật ngày mới
             $sql = "UPDATE DonDatTour 
                     SET NgayKhoiHanh = ?, 
                         TrangThai = 'Chờ xử lý', 
@@ -29,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $update = $db->prepare($sql);
             $update->execute([$new_date, $order_id]);
 
-            // Sửa đường dẫn chuyển hướng về history.php
             echo "<script>
                     alert('Đã gửi yêu cầu đổi ngày thành công!');
                     window.location.href = 'history.php';

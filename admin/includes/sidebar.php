@@ -38,11 +38,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
         </li>
 
+
         <li>
             <a href="orders.php" class="<?php echo ($current_page == 'orders.php') ? 'active' : ''; ?>">
                 <i class="fas fa-shopping-cart"></i> Quản lý Đơn hàng
             </a>
         </li>
+        <li>
+            <a href="posts.php" class="<?php echo ($current_page == 'posts.php') ? 'active' : ''; ?>">
+                <i class="fas fa-comments"></i> Quản lý Bài viết
+            </a>
+    </li>
 
         <li><a href="/DoAn_TourDuLich/index.php" target="_blank"><i class="fas fa-globe"></i> Xem Website</a></li>
         <li><a href="/DoAn_TourDuLich/auth/logout.php"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a></li>

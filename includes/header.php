@@ -1,22 +1,49 @@
 <?php
+// 1. KHỞI ĐỘNG SESSION
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $isLoggedIn = isset($_SESSION['user_id']);
-$avatarUrl = '/DoAn_TourDuLich/assets/images/default-avatar.png'; 
 $userName = 'Khách';
 
+// 2. HÀM XỬ LÝ ẢNH (Dùng chung cho cả Header)
+function getHeaderAvatar($path) {
+    // 1. Ảnh Online (Cloudinary, Google...) -> Dùng luôn
+    if (strpos($path, 'http') === 0) {
+        return $path;
+    }
+
+    // 2. Nếu path rỗng -> Trả về ảnh mặc định Online (UI Avatars)
+    if (empty($path)) {
+        return 'https://ui-avatars.com/api/?name=User&background=random&size=150';
+    }
+
+    // 3. Xử lý đường dẫn Local
+    // Xóa dấu / ở đầu nếu có
+    $cleanPath = ltrim($path, '/');
+
+    // Nếu trong Database lưu là "uploads/avatars/..."
+    if (strpos($cleanPath, 'uploads/') === 0) {
+        return '/DoAn_TourDuLich/' . $cleanPath;
+    }
+
+    // Nếu trong Database chỉ lưu tên file "avatar.png"
+    return '/DoAn_TourDuLich/uploads/avatars/' . $cleanPath;
+}
+
+// 3. LẤY THÔNG TIN USER (NẾU ĐÃ ĐĂNG NHẬP)
+$avatarUrl = 'https://ui-avatars.com/api/?name=Khach&background=random'; // Mặc định cho khách
 if ($isLoggedIn) {
     $userName = isset($_SESSION['fullname']) ? $_SESSION['fullname'] : 'Thành viên';
-    $userAvatar = isset($_SESSION['avatar']) ? $_SESSION['avatar'] : '';
-
-    if (!empty($userAvatar)) {
-        if (strpos($userAvatar, 'http') === 0) {
-            $avatarUrl = $userAvatar;
-        } else {
-            $avatarUrl = 'uploads/avatars/' . $userAvatar;
-        }
+    // Lấy avatar từ session và xử lý qua hàm
+    $rawAvatar = isset($_SESSION['avatar']) ? $_SESSION['avatar'] : '';
+    
+    // Nếu có tên, dùng tên để tạo avatar mặc định đẹp hơn
+    if (empty($rawAvatar)) {
+        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=random';
+    } else {
+        $avatarUrl = getHeaderAvatar($rawAvatar);
     }
 }
 ?>
@@ -127,7 +154,7 @@ if ($isLoggedIn) {
                 <div class="user-dropdown" id="userTrigger" onclick="toggleMenu(event)">
                     <div class="user-profile">
                             <img src="<?php echo $avatarUrl; ?>" class="avatar-circle" 
-                                onerror="this.onerror=null; this.src='/DoAn_TourDuLich/assets/images/default-avatar.png';">
+                                onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($userName); ?>&background=random';">
                         <span class="user-name-text"><?php echo htmlspecialchars($userName); ?></span>
                         <i class="fas fa-caret-down" style="font-size:12px; color:#666; margin-left:3px; transition:0.3s;"></i>
                     </div>

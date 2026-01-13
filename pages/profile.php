@@ -2,7 +2,6 @@
 include '../includes/header.php'; 
 require_once '../config/db_connect.php';
 
-// Check đăng nhập
 if (!isset($_SESSION['user_id'])) {
     echo "<script>window.location.href='../auth/login.php';</script>";
     exit;
@@ -10,32 +9,33 @@ if (!isset($_SESSION['user_id'])) {
 
 $uid = $_SESSION['user_id'];
 
-// Lấy thông tin User
 $stmt = $db->prepare("SELECT * FROM NguoiDung WHERE id = ?");
 $stmt->execute([$uid]);
 $user = $stmt->fetch();
 
-// Lấy danh sách bài viết của user
 $postStmt = $db->prepare("SELECT * FROM BaiViet WHERE idNguoiDung = ? ORDER BY NgayDang DESC");
 $postStmt->execute([$uid]);
 $myPosts = $postStmt->fetchAll();
-
-// --- HÀM XỬ LÝ ẢNH (GIỐNG Y HỆT BÊN COMMUNITY) ---
 function getAvatarUrl($path) {
-    if (empty($path)) return 'assets/images/default-avatar.png'; // Trả về link tương đối
-    if (strpos($path, 'http') === 0) return $path;
-    if (strpos($path, 'uploads/') === 0) return $path; // Giữ nguyên, không thêm /DoAn...
-    return 'uploads/avatars/' . $path;
+    if (empty($path)) {
+        return 'https://ui-avatars.com/api/?name=User&background=random&size=150';
+    }
+
+    if (strpos($path, 'http') === 0) {
+        return $path;
+    }
+    if (strpos($path, 'uploads/') === 0) {
+        return '/DoAn_TourDuLich/' . $path;
+    }
+    return '/DoAn_TourDuLich/uploads/avatars/' . $path;
 }
 ?>
 
 <style>
     body { background-color: #f0f2f5; }
-    /* THÊM ĐOẠN NÀY ĐỂ FIX FOOTER */
-    /* 1. Đẩy nội dung chính dài ra để ép footer xuống đáy */
+    
     .profile-container {
-        min-height: 70vh; /* Chiếm tối thiểu 70% chiều cao màn hình */
-        /* Giữ nguyên các thuộc tính cũ: */
+        min-height: 70vh;
         max-width: 960px; 
         margin: 30px auto; 
         padding: 0 15px; 
@@ -43,7 +43,13 @@ function getAvatarUrl($path) {
         gap: 20px;
     }
     
-    /* CỘT TRÁI: MENU */
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-container { flex-direction: column; }
+        .profile-sidebar { max-width: 100% !important; }
+    }
+
+    /* SIDEBAR */
     .profile-sidebar { flex: 1; max-width: 300px; }
     .user-card { background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 20px; text-align: center; margin-bottom: 20px; }
     .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -56,20 +62,18 @@ function getAvatarUrl($path) {
     .menu-item.active { background: #e7f3ff; color: #1877f2; border-left-color: #1877f2; }
     .menu-item i { width: 25px; text-align: center; margin-right: 10px; }
 
-    /* CỘT PHẢI: NỘI DUNG */
+    /* CONTENT */
     .profile-content { flex: 2; }
     .tab-content { display: none; background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); padding: 25px; animation: fadeIn 0.3s; }
     .tab-content.active { display: block; }
     .tab-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 
-    /* FORM STYLE */
     .form-group { margin-bottom: 15px; }
     .form-label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; }
     .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
     .btn-save { background: #1877f2; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
     .btn-save:hover { background: #166fe5; }
 
-    /* DANH SÁCH BÀI VIẾT NHỎ */
     .mini-post { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #eee; }
     .mini-post:last-child { border-bottom: none; }
     .mini-post img { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
@@ -78,12 +82,6 @@ function getAvatarUrl($path) {
     .status-label { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #e4e6eb; color: #65676b; }
     .status-active { background: #e7f3ff; color: #1877f2; }
 
-    footer, .footer {
-        padding: 20px 0 !important;
-        height: auto !important;
-        min-height: auto !important;
-    }
-
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
@@ -91,10 +89,14 @@ function getAvatarUrl($path) {
     
     <div class="profile-sidebar">
         <div class="user-card">
-            <img src="<?php echo getAvatarUrl($user['Avatar']); ?>" class="profile-avatar" onerror="this.src='../assets/images/default-avatar.png'">
+            <img src="<?php echo getAvatarUrl($user['Avatar']); ?>" 
+                 class="profile-avatar" 
+                 onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=<?php echo urlencode($user['TenDayDu']); ?>&background=random&size=150';">
+            
             <div class="profile-name"><?php echo htmlspecialchars($user['TenDayDu']); ?></div>
             <div class="profile-email"><?php echo htmlspecialchars($user['TenDangNhap']); ?></div>
-            <a href="../auth/logout.php" style="color: #d32f2f; font-size: 14px; text-decoration: none; font-weight: 600;">
+            
+            <a href="../auth/logout.php" style="color: #d32f2f; font-size: 14px; text-decoration: none; font-weight: 600; display:block; margin-top:10px;">
                 <i class="fas fa-sign-out-alt"></i> Đăng xuất
             </a>
         </div>
@@ -142,7 +144,13 @@ function getAvatarUrl($path) {
                 <?php foreach($myPosts as $p): ?>
                 <div class="mini-post">
                     <?php if(!empty($p['HinhAnh'])): ?>
-                        <img src="<?php echo $p['HinhAnh']; ?>" loading="lazy">
+                        <?php 
+                            $postImg = $p['HinhAnh'];
+                            if (strpos($postImg, 'http') !== 0 && strpos($postImg, '/DoAn_TourDuLich/') !== 0) {
+                                $postImg = '/DoAn_TourDuLich/' . $postImg;
+                            }
+                        ?>
+                        <img src="<?php echo $postImg; ?>" loading="lazy">
                     <?php endif; ?>
                     <div class="mini-post-content">
                         <div style="font-weight:600; margin-bottom:5px;">
@@ -156,13 +164,16 @@ function getAvatarUrl($path) {
                         </div>
                     </div>
                     <div>
-                        <button style="border:none; background:none; color:#d32f2f; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        <button style="border:none; background:none; color:#d32f2f; cursor:pointer;" onclick="alert('Chức năng đang phát triển!')"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <p style="text-align:center; color:#666;">Bạn chưa có bài viết nào.</p>
-                <div style="text-align:center;"><a href="community.php" style="color:#1877f2;">Đến trang Cộng đồng</a></div>
+                <div style="text-align:center; padding:30px; color:#666;">
+                    <i class="fas fa-pencil-alt" style="font-size:30px; margin-bottom:10px; opacity:0.5;"></i>
+                    <p>Bạn chưa có bài viết nào.</p>
+                    <a href="community.php" style="color:#1877f2; font-weight:600; text-decoration:none;">Viết bài ngay</a>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -207,18 +218,23 @@ function getAvatarUrl($path) {
 </div>
 
 <script>
-    // 1. CHUYỂN TAB
+    // 1. LOGIC CHUYỂN TAB
     function switchTab(tabName) {
+        // Xóa active cũ
         document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
 
-        const menus = document.querySelectorAll('.menu-item');
-        if(tabName == 'info') menus[0].classList.add('active');
-        if(tabName == 'posts') menus[1].classList.add('active');
-        if(tabName == 'password') menus[2].classList.add('active');
-        if(tabName == 'support') menus[3].classList.add('active');
+        // Active menu mới (Tìm thẻ nào có onclick chứa tabName)
+        const menuItems = document.querySelectorAll('.menu-item');
+        menuItems.forEach(item => {
+             if(item.getAttribute('onclick').includes("'" + tabName + "'")) {
+                 item.classList.add('active');
+             }
+        });
 
-        document.getElementById('tab-' + tabName).classList.add('active');
+        // Active nội dung mới
+        const targetTab = document.getElementById('tab-' + tabName);
+        if(targetTab) targetTab.classList.add('active');
     }
 
     // 2. XỬ LÝ GỬI BÁO CÁO (AJAX)
@@ -242,7 +258,10 @@ function getAvatarUrl($path) {
                 this.reset();
             }
         })
-        .catch(err => alert('Lỗi hệ thống!'))
+        .catch(err => {
+            console.error(err);
+            alert('Lỗi kết nối hệ thống!');
+        })
         .finally(() => {
             btn.innerText = originalText;
             btn.disabled = false;
