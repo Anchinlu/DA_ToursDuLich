@@ -1,4 +1,5 @@
 <?php include 'includes/header.php'; 
+require_once '../config/mail_setup.php';
 
 // --- 1. HÀM GHI LOG LỊCH SỬ ---
 function logHistory($db, $orderId, $action, $detail = '') {
@@ -16,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $delay_days = isset($_POST['delay_days']) ? intval($_POST['delay_days']) : 0;
 
     try {
-        // Cập nhật trạng thái, lý do, số ngày hoãn
         $stmt = $db->prepare("UPDATE DonDatTour SET TrangThai = ?, LyDoHuy = ?, SoNgayHoan = ? WHERE id = ?");
         $stmt->execute([$status, $reason, $delay_days, $id]);
         
@@ -30,29 +30,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
 // --- 3. XỬ LÝ GET: CÁC HÀNH ĐỘNG NHANH ---
 if (isset($_GET['id'])) {
     $id = $_GET['id'];
-    
-    // A. Duyệt đơn nhanh
     if (isset($_GET['status']) && $_GET['status'] == 'Đã xác nhận') {
+
+       $stmtInfo = $db->prepare("
+            SELECT d.*, u.TenDangNhap as Email, u.TenDayDu, t.TenTour 
+            FROM DonDatTour d
+            JOIN NguoiDung u ON d.idNguoiDung = u.id
+            JOIN Tour t ON d.idTour = t.id
+            WHERE d.id = ?
+        ");
+            $stmtInfo->execute([$id]);
+            $orderInfo = $stmtInfo->fetch(PDO::FETCH_ASSOC);
+
         $db->prepare("UPDATE DonDatTour SET TrangThai = 'Đã xác nhận' WHERE id = ?")->execute([$id]);
-        logHistory($db, $id, "Admin duyệt đơn", "Xác nhận nhanh");
-        echo "<script>window.location='orders.php';</script>";
+        
+        if ($orderInfo && !empty($orderInfo['Email'])) {
+            $mailData = [
+                'id' => $orderInfo['id'],
+                'TenTour' => $orderInfo['TenTour'],
+                'NgayKhoiHanh' => $orderInfo['NgayKhoiHanh'],
+                'SoNguoi' => $orderInfo['SoNguoiLon'] + $orderInfo['SoTreEm'],
+                'TongGia' => $orderInfo['TongGia']
+            ];
+            sendOrderConfirmation($orderInfo['Email'], $orderInfo['TenDayDu'], $mailData);
+        }
+
+        logHistory($db, $id, "Admin duyệt đơn", "Đã gửi email xác nhận cho khách");
+        echo "<script>alert('Đã duyệt và gửi email vé cho khách!'); window.location='orders.php';</script>";
     }
 
-    // B. Xác nhận đã hoàn tiền (Logic cũ cần giữ lại)
+    // B. XÁC NHẬN ĐÃ HOÀN TIỀN (Phần này bị thiếu ở code cũ của bạn)
     if (isset($_GET['action']) && $_GET['action'] == 'refunded') {
         $stmt = $db->prepare("SELECT LyDoHuy FROM DonDatTour WHERE id = ?");
         $stmt->execute([$id]);
         $oldNote = $stmt->fetchColumn();
-        $newNote = "ĐÃ HOÀN TIỀN XONG. (" . $oldNote . ")";
         
+        $newNote = "ĐÃ HOÀN TIỀN XONG. (" . $oldNote . ")";
         $db->prepare("UPDATE DonDatTour SET TrangThai = 'Đã hủy', LyDoHuy = ? WHERE id = ?")->execute([$newNote, $id]);
+        
         logHistory($db, $id, "Hoàn tất hoàn tiền", "Đã chuyển khoản trả khách");
-        echo "<script>alert('Đã xác nhận hoàn tiền!'); window.location='orders.php';</script>";
+        echo "<script>alert('Đã xác nhận hoàn tiền thành công!'); window.location='orders.php';</script>";
     }
 }
 
 // --- 4. LẤY DANH SÁCH & BỘ LỌC ---
-$statusFilter = isset($_GET['status']) ? $_GET['status'] : ''; // Lấy tham số lọc
+$statusFilter = isset($_GET['status']) ? $_GET['status'] : ''; 
 $orders = [];
 
 try {
@@ -61,15 +83,12 @@ try {
             JOIN NguoiDung u ON d.idNguoiDung = u.id
             JOIN Tour t ON d.idTour = t.id";
     
-    // Áp dụng bộ lọc nếu có
     if ($statusFilter) {
         $sql .= " WHERE d.TrangThai = '$statusFilter'";
     }
 
-    $sql .= " ORDER BY d.id DESC"; // Đơn mới nhất lên đầu
+    $sql .= " ORDER BY d.id DESC"; 
     $orders = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-    // Đếm đơn hoàn tiền để hiện thông báo đỏ
     $countRefund = $db->query("SELECT COUNT(*) FROM DonDatTour WHERE TrangThai = 'Yêu cầu hoàn tiền'")->fetchColumn();
 
 } catch (Exception $e) {

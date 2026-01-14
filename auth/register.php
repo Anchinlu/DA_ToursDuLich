@@ -2,60 +2,58 @@
 session_start();
 require_once '../config/db_connect.php';
 
+// Tích hợp Cloudinary
+if (file_exists('../config/cloudinary_setup.php')) {
+    require_once '../config/cloudinary_setup.php';
+}
+use Cloudinary\Api\Upload\UploadApi;
+
 $message = '';
 
 // XỬ LÝ KHI NGƯỜI DÙNG BẤM NÚT ĐĂNG KÝ
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // 1. Lấy dữ liệu từ form
     $fullname = trim($_POST['fullname']);
-    $username = trim($_POST['username']);
+    $email    = trim($_POST['email']); // Lấy Email (sẽ lưu vào cột TenDangNhap)
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
-    // 2. Kiểm tra mật khẩu xác nhận
     if ($password != $confirm_password) {
         $message = "<div class='alert alert-error'><i class='fas fa-exclamation-triangle'></i> Mật khẩu xác nhận không khớp!</div>";
     } else {
-        // 3. Xử lý Upload Avatar
-        $avatar_path = 'default.jpg'; // Ảnh mặc định nếu không upload
+        $avatar_path = '';
         
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
-            $target_dir = "uploads/avatars/";
-            // Tạo thư mục nếu chưa có
-            if (!file_exists($target_dir)) { mkdir($target_dir, 0777, true); }
-            
-            // Đổi tên file để tránh trùng lặp (VD: avatar_1627384.jpg)
-            $file_ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
-            $new_name = "avatar_" . time() . "." . $file_ext;
-            
-            if (move_uploaded_file($_FILES['avatar']['tmp_name'], $target_dir . $new_name)) {
-                $avatar_path = $new_name;
+            try {
+                $upload = (new UploadApi())->upload($_FILES['avatar']['tmp_name'], [
+                    'folder' => 'chinliu_avatars', 
+                    'resource_type' => 'image'
+                ]);
+                $avatar_path = $upload['secure_url']; 
+            } catch (Exception $e) {
             }
         }
+        // -------------------------------------------
 
-        // 4. Lưu vào Cơ sở dữ liệu
         try {
-            // Băm mật khẩu
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             
+            // Lưu Email vào cột TenDangNhap
             $sql = "INSERT INTO NguoiDung (TenDangNhap, MatKhau, TenDayDu, Avatar, VaiTro, TrangThai) 
-                    VALUES (:user, :pass, :name, :avatar, 'user', 1)";
+                    VALUES (:email, :pass, :name, :avatar, 'user', 1)";
             
             $stmt = $db->prepare($sql);
             $stmt->execute([
-                ':user' => $username, 
-                ':pass' => $hashed_password, 
-                ':name' => $fullname, 
+                ':email'  => $email, 
+                ':pass'   => $hashed_password, 
+                ':name'   => $fullname, 
                 ':avatar' => $avatar_path
             ]);
             
-            // Thông báo thành công
             $message = "<div class='alert alert-success'><i class='fas fa-check-circle'></i> Đăng ký thành công! <a href='login.php' class='link-primary transition-link'>Đăng nhập ngay</a></div>";
 
         } catch (PDOException $e) {
-            // Bắt lỗi trùng tên đăng nhập (Mã lỗi 1062)
             if ($e->errorInfo[1] == 1062) {
-                $message = "<div class='alert alert-error'><i class='fas fa-times-circle'></i> Tên đăng nhập này đã tồn tại!</div>";
+                $message = "<div class='alert alert-error'><i class='fas fa-times-circle'></i> Email này đã được sử dụng!</div>";
             } else {
                 $message = "<div class='alert alert-error'>Lỗi hệ thống: " . $e->getMessage() . "</div>";
             }
@@ -69,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký - LOCY Travel</title>
+    <title>Đăng Ký - Chinliu Tour</title>
     <link rel="stylesheet" href="/DoAn_TourDuLich/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -119,10 +117,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <input type="text" id="fullname" name="fullname" placeholder=" " required>
                         <label for="fullname">Họ và tên</label>
                     </div>
+                    
                     <div class="input-group">
                         <i class="fas fa-envelope field-icon"></i>
-                        <input type="text" id="username" name="username" placeholder=" " required>
-                        <label for="username">Username</label>
+                        <input type="email" id="email" name="email" placeholder=" " required>
+                        <label for="email">Địa chỉ Email</label>
                     </div>
                 </div>
 
@@ -141,7 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 <div class="avatar-compact">
                     <i class="fas fa-camera" style="color: var(--text-light);"></i>
-                    <span style="color: var(--text-gray); white-space: nowrap;">Ảnh đại diện:</span>
+                    <span style="color: var(--text-gray); white-space: nowrap;">Ảnh đại diện (Tùy chọn):</span>
                     <input type="file" name="avatar" accept="image/*" style="font-size: 12px;">
                 </div>
 
@@ -170,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <div id="wiper-container">
-    <div class="center-logo">CHILIU</div>
+    <div class="center-logo">CHINLIU</div>
     <div class="wipe-layer wipe-light"></div>
     <div class="wipe-layer wipe-dark"></div>
 </div>

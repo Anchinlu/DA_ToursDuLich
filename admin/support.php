@@ -1,20 +1,11 @@
 <?php
-// Include Header (Chứa Sidebar và giao diện chung)
 include 'includes/header.php'; 
 require_once '../config/db_connect.php';
 
-// --- 1. KIỂM TRA QUYỀN ADMIN (Sửa lại cho khớp với hệ thống của bạn) ---
 if (!isset($_SESSION['user_id'])) {
-    // Nếu chưa đăng nhập thì đá về login
     echo "<script>window.location.href='../auth/login.php';</script>";
     exit;
 }
-
-// Kiểm tra quyền (Nếu trong header.php chưa check)
-// $chk = $db->prepare("SELECT VaiTro FROM NguoiDung WHERE id = ?");
-// $chk->execute([$_SESSION['user_id']]);
-// if ($chk->fetchColumn() !== 'admin') { echo "<script>window.location.href='../index.php';</script>"; exit; }
-
 
 // --- 2. XỬ LÝ: CẬP NHẬT TRẠNG THÁI ---
 if (isset($_GET['action']) && isset($_GET['id'])) {

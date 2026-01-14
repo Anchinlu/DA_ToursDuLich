@@ -1,45 +1,36 @@
 <?php
-// 1. KHỞI ĐỘNG SESSION
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 $isLoggedIn = isset($_SESSION['user_id']);
 $userName = 'Khách';
+// Thêm biến kiểm tra Admin
+$isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
 
-// 2. HÀM XỬ LÝ ẢNH (Dùng chung cho cả Header)
 function getHeaderAvatar($path) {
-    // 1. Ảnh Online (Cloudinary, Google...) -> Dùng luôn
+    // 1. Ảnh Online
     if (strpos($path, 'http') === 0) {
         return $path;
     }
-
-    // 2. Nếu path rỗng -> Trả về ảnh mặc định Online (UI Avatars)
+    // 2. Không có ảnh -> Ảnh mặc định
     if (empty($path)) {
         return 'https://ui-avatars.com/api/?name=User&background=random&size=150';
     }
-
-    // 3. Xử lý đường dẫn Local
-    // Xóa dấu / ở đầu nếu có
+    // 3. Xử lý đường dẫn
     $cleanPath = ltrim($path, '/');
-
-    // Nếu trong Database lưu là "uploads/avatars/..."
     if (strpos($cleanPath, 'uploads/') === 0) {
         return '/DoAn_TourDuLich/' . $cleanPath;
     }
-
-    // Nếu trong Database chỉ lưu tên file "avatar.png"
     return '/DoAn_TourDuLich/uploads/avatars/' . $cleanPath;
 }
 
-// 3. LẤY THÔNG TIN USER (NẾU ĐÃ ĐĂNG NHẬP)
-$avatarUrl = 'https://ui-avatars.com/api/?name=Khach&background=random'; // Mặc định cho khách
+$avatarUrl = 'https://ui-avatars.com/api/?name=Khach&background=random'; 
 if ($isLoggedIn) {
     $userName = isset($_SESSION['fullname']) ? $_SESSION['fullname'] : 'Thành viên';
-    // Lấy avatar từ session và xử lý qua hàm
     $rawAvatar = isset($_SESSION['avatar']) ? $_SESSION['avatar'] : '';
     
-    // Nếu có tên, dùng tên để tạo avatar mặc định đẹp hơn
     if (empty($rawAvatar)) {
         $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($userName) . '&background=random';
     } else {
@@ -60,64 +51,25 @@ if ($isLoggedIn) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* Container chính */
         .user-dropdown { 
-            position: relative; 
-            display: inline-flex; 
-            align-items: center; 
-            cursor: pointer; /* Vẫn giữ con trỏ tay để biết là bấm được */
-            padding-left: 15px;
-            height: 100%;
-            user-select: none; 
+            position: relative; display: inline-flex; align-items: center; cursor: pointer; padding-left: 15px; height: 100%; user-select: none; 
         }
-        
         .user-profile { display: flex; align-items: center; gap: 8px; }
         .avatar-circle { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; transition: 0.3s; }
         .user-name-text { font-weight: 600; font-size: 14px; color: #333; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* Khi menu đang mở (Active) */
         .user-dropdown.active .avatar-circle { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(255, 165, 0, 0.2); }
         .user-dropdown.active .user-name-text { color: var(--primary-color); }
         .user-dropdown.active .fa-caret-down { transform: rotate(180deg); transition: 0.3s; }
 
-        /* MENU CON (Mặc định ẩn) */
-        .dropdown-content {
-            display: none; 
-            position: absolute;
-            right: 0;
-            top: 130%; /* Đẩy xuống thấp một chút cho đẹp */
-            background-color: white;
-            min-width: 220px;
-            box-shadow: 0px 5px 20px rgba(0,0,0,0.15);
-            border-radius: 8px;
-            z-index: 9999;
-            padding: 8px 0;
-            border: 1px solid #eee;
-        }
+        .dropdown-content { display: none; position: absolute; right: 0; top: 130%; background-color: white; min-width: 220px; box-shadow: 0px 5px 20px rgba(0,0,0,0.15); border-radius: 8px; z-index: 9999; padding: 8px 0; border: 1px solid #eee; }
+        .dropdown-content.show { display: block; animation: pullDown 0.2s ease-out forwards; }
 
-        .dropdown-content.show {
-            display: block;
-            animation: pullDown 0.2s ease-out forwards;
-        }
-
-        /* Link trong menu */
-        .dropdown-content a {
-            color: #444;
-            padding: 10px 20px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
+        .dropdown-content a { color: #444; padding: 10px 20px; text-decoration: none; display: flex; align-items: center; font-size: 14px; transition: all 0.2s; }
         .dropdown-content a:hover { background-color: #f0fdf4; color: var(--primary-color); padding-left: 25px; }
         .dropdown-content i { width: 25px; text-align: center; margin-right: 5px; color: #888; }
         
-        /* Hiệu ứng rơi xuống */
-        @keyframes pullDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes pullDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -148,7 +100,8 @@ if ($isLoggedIn) {
         </ul>
 
         <div class="nav-icons">
-            <i class="fas fa-search search-icon"></i>
+            <a href="/DoAn_TourDuLich/pages/search.php" style="color: inherit;">
+            </a>
             
             <?php if ($isLoggedIn): ?>
                 <div class="user-dropdown" id="userTrigger" onclick="toggleMenu(event)">
@@ -160,6 +113,13 @@ if ($isLoggedIn) {
                     </div>
                     
                     <div class="dropdown-content" id="userDropdownMenu">
+                        <?php if($isAdmin): ?>
+                            <a href="/DoAn_TourDuLich/admin/index.php" style="color: #d32f2f; font-weight: bold; background-color: #fff5f5;">
+                                <i class="fas fa-user-shield"></i> Trang Quản Trị
+                            </a>
+                            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">
+                        <?php endif; ?>
+
                         <a href="/DoAn_TourDuLich/pages/profile.php"><i class="fas fa-user-circle"></i> Hồ sơ cá nhân</a>
                         <a href="/DoAn_TourDuLich/pages/history.php"><i class="fas fa-history"></i> Lịch sử đặt tour</a>
                         <a href="/DoAn_TourDuLich/pages/profile.php#posts"><i class="fas fa-pen-nib"></i> Bài viết của tôi</a>

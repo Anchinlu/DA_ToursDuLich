@@ -70,7 +70,21 @@ $historyLogs = $stmtHistory->fetchAll();
         <div class="info-box">
             <h3 style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:15px;">Thông tin chung</h3>
             <div style="display:flex; gap:20px;">
-                <img src="/DoAn_TourDuLich/<?php echo $order['HinhAnh']; ?>" width="120" style="border-radius:8px;">
+                <?php 
+                    $tourImg = 'https://placehold.co/120x120?text=No+Image';
+                    if (!empty($order['HinhAnh'])) {
+                        if (strpos($order['HinhAnh'], 'http') === 0) {
+                            $tourImg = $order['HinhAnh'];
+                        } else {
+                            $tourImg = '/DoAn_TourDuLich/' . ltrim($order['HinhAnh'], '/');
+                        }
+                    }
+                ?>
+                <img src="<?php echo $tourImg; ?>" 
+                     width="120" height="90" 
+                     style="object-fit:cover; border-radius:8px; border:1px solid #ddd;"
+                     onerror="this.src='https://placehold.co/120x90?text=Error'">
+
                 <div>
                     <h4 style="margin:0 0 5px 0;"><?php echo htmlspecialchars($order['TenTour']); ?></h4>
                     <p><strong>Khách hàng:</strong> <?php echo htmlspecialchars($order['TenDayDu']); ?> (<?php echo htmlspecialchars($order['TenDangNhap']); ?>)</p>

@@ -1,5 +1,4 @@
 <?php
-// Nhúng autoload và file cấu hình (đã lùi 1 cấp)
 require_once '../vendor/autoload.php';
 require_once '../config/google_setup.php';
 

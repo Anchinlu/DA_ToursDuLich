@@ -3,7 +3,6 @@
 // 1. XỬ LÝ XÓA BÀI VIẾT
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    // Nên xóa cả ảnh trên server/cloudinary nếu kĩ tính (ở đây ta xóa DB trước cho nhanh)
     $stmt = $db->prepare("DELETE FROM BaiViet WHERE id = ?");
     $stmt->execute([$id]);
     echo "<script>alert('Đã xóa bài viết!'); window.location='posts.php';</script>";

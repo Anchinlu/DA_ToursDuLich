@@ -1,13 +1,10 @@
 <?php include 'includes/header.php'; 
 
-// 1. SỐ LIỆU THỐNG KÊ CƠ BẢN
 $userCount = $db->query("SELECT COUNT(*) FROM NguoiDung WHERE VaiTro != 'admin'")->fetchColumn();
 $tourCount = $db->query("SELECT COUNT(*) FROM Tour")->fetchColumn();
 $orderPending = $db->query("SELECT COUNT(*) FROM DonDatTour WHERE TrangThai = 'Chờ xử lý'")->fetchColumn();
 $revenue = $db->query("SELECT SUM(TongGia) FROM DonDatTour WHERE TrangThai = 'Đã xác nhận'")->fetchColumn();
 
-// 2. DỮ LIỆU CHO BIỂU ĐỒ DOANH THU (TOP 5 TOUR)
-// Lấy tên tour và tổng tiền bán được của tour đó
 $sqlChart1 = "SELECT t.TenTour, SUM(d.TongGia) as DoanhThu 
               FROM DonDatTour d 
               JOIN Tour t ON d.idTour = t.id 
@@ -17,7 +14,6 @@ $sqlChart1 = "SELECT t.TenTour, SUM(d.TongGia) as DoanhThu
               LIMIT 5";
 $chart1Data = $db->query($sqlChart1)->fetchAll(PDO::FETCH_ASSOC);
 
-// Chuẩn bị mảng dữ liệu cho JS
 $labels1 = [];
 $data1 = [];
 foreach($chart1Data as $item) {
@@ -25,7 +21,6 @@ foreach($chart1Data as $item) {
     $data1[] = $item['DoanhThu'];
 }
 
-// 3. DỮ LIỆU CHO BIỂU ĐỒ TRẠNG THÁI ĐƠN
 $sqlChart2 = "SELECT TrangThai, COUNT(*) as SoLuong FROM DonDatTour GROUP BY TrangThai";
 $chart2Data = $db->query($sqlChart2)->fetchAll(PDO::FETCH_ASSOC);
 
@@ -121,15 +116,14 @@ foreach($chart2Data as $item) {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // 1. Cấu hình Biểu đồ Doanh thu (Bar Chart)
     const ctx1 = document.getElementById('revenueChart').getContext('2d');
     new Chart(ctx1, {
         type: 'bar',
         data: {
-            labels: <?php echo json_encode($labels1); ?>, // Dữ liệu từ PHP
+            labels: <?php echo json_encode($labels1); ?>, 
             datasets: [{
                 label: 'Doanh thu (VNĐ)',
-                data: <?php echo json_encode($data1); ?>, // Dữ liệu từ PHP
+                data: <?php echo json_encode($data1); ?>, 
                 backgroundColor: '#4f46e5',
                 borderRadius: 6,
             }]
@@ -140,7 +134,6 @@ foreach($chart2Data as $item) {
         }
     });
 
-    // 2. Cấu hình Biểu đồ Trạng thái (Doughnut Chart)
     const ctx2 = document.getElementById('statusChart').getContext('2d');
     new Chart(ctx2, {
         type: 'doughnut',
@@ -149,9 +142,9 @@ foreach($chart2Data as $item) {
             datasets: [{
                 data: <?php echo json_encode($data2); ?>,
                 backgroundColor: [
-                    '#f59e0b', // Vàng (Chờ)
-                    '#10b981', // Xanh (OK)
-                    '#ef4444'  // Đỏ (Hủy)
+                    '#f59e0b',
+                    '#10b981',
+                    '#ef4444'  
                 ],
                 borderWidth: 0
             }]

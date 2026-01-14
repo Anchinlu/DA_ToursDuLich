@@ -1,9 +1,7 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php'; // Đảm bảo đường dẫn đúng tới vendor
+require_once __DIR__ . '/../vendor/autoload.php'; 
 
 use Cloudinary\Configuration\Configuration;
-
-// Thay thế các thông số bên dưới bằng thông tin trong Dashboard Cloudinary của bạn
 Configuration::instance([
     'cloud' => [
         'cloud_name' => 'dmaeuom2i', 

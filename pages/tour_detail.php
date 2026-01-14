@@ -2,16 +2,14 @@
 include '../includes/header.php'; 
 require_once '../config/db_connect.php';
 
-// 1. LẤY ID TOUR TỪ URL
 if (!isset($_GET['id'])) {
     echo "<script>alert('Không tìm thấy tour!'); window.location='index.php';</script>";
     exit;
 }
 $tour_id = $_GET['id'];
 
-// 2. TRUY VẤN DỮ LIỆU
 try {
-    // A. Lấy thông tin tour
+    // Lấy thông tin Tour
     $sql = "SELECT t.*, d.TenDanhMuc 
             FROM Tour t 
             LEFT JOIN DanhMuc d ON t.idDanhMuc = d.id 
@@ -25,32 +23,31 @@ try {
         exit;
     }
 
-    // --- XỬ LÝ LẤY ĐÁNH GIÁ & SỐ SAO ---
-    // 1. Khởi tạo giá trị mặc định (Để không bị lỗi Undefined)
+    // Lấy danh sách đánh giá & tính trung bình sao
     $reviews = [];
     $avgStar = 0;
     $totalReview = 0;
 
     try {
-        // 2. Lấy danh sách đánh giá của Tour này
-        $stmtReview = $db->prepare("\n            SELECT d.*, u.TenDayDu, u.Avatar \n            FROM DanhGia d \n            JOIN NguoiDung u ON d.idNguoiDung = u.id \n            WHERE d.idTour = ? \n            ORDER BY d.NgayDanhGia DESC\n        ");
+        $stmtReview = $db->prepare("
+            SELECT d.*, u.TenDayDu, u.Avatar 
+            FROM DanhGia d 
+            JOIN NguoiDung u ON d.idNguoiDung = u.id 
+            WHERE d.idTour = ? 
+            ORDER BY d.NgayDanhGia DESC");
         $stmtReview->execute([$tour_id]);
         $reviews = $stmtReview->fetchAll();
         $totalReview = count($reviews);
 
-        // 3. Tính điểm trung bình
         if ($totalReview > 0) {
             $sumStar = 0;
             foreach ($reviews as $rv) {
                 $sumStar += $rv['SoSao'];
             }
-            $avgStar = round($sumStar / $totalReview, 1); // Làm tròn 1 chữ số thập phân
+            $avgStar = round($sumStar / $totalReview, 1); 
         }
 
-    } catch (Exception $e) {
-        // Nếu lỗi SQL (ví dụ chưa tạo bảng), code vẫn chạy tiếp với giá trị 0
-        // echo "Lỗi: " . $e->getMessage(); 
-    }
+    } catch (Exception $e) { }
 
 } catch (Exception $e) {
     echo "Lỗi: " . $e->getMessage();
@@ -58,6 +55,9 @@ try {
 ?>
 
 <style>
+    /* CSS Riêng cho trang chi tiết */
+    .tour-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+    
     /* CSS Đánh giá */
     .review-section { margin-top: 30px; border-top: 1px dashed #eee; padding-top: 30px; }
     .review-header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
@@ -70,7 +70,7 @@ try {
     .star-rating label { font-size: 24px; color: #ddd; cursor: pointer; transition: 0.2s; padding: 0 2px; }
     .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #f59e0b; }
 
-    /* Danh sách comment */
+    /* Comment List */
     .comment-item { display: flex; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
     .user-avatar { width: 45px; height: 45px; border-radius: 50%; background: #eee; object-fit: cover; }
     .comment-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
@@ -94,7 +94,6 @@ try {
             <h1 class="tour-title"><?php echo htmlspecialchars($tour['TenTour']); ?></h1>
             <div class="tour-meta">
                 <span><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($tour['TenDanhMuc']); ?></span>
-                <span><i class="far fa-clock"></i> 3 Ngày 2 Đêm</span> 
                 <span><i class="fas fa-star" style="color:orange"></i> <?php echo $avgStar > 0 ? $avgStar : '5.0'; ?> (<?php echo $totalReview; ?> đánh giá)</span>
             </div>
         </div>
@@ -102,27 +101,18 @@ try {
         <div class="tour-layout">
             <div class="tour-content">
                 <?php
-                    $mainImg = !empty($tour['HinhAnh']) ? $tour['HinhAnh'] : 'assets/images/default-tour.jpg';
+                    // Xử lý ảnh đại diện (Cloudinary hoặc Local)
+                    $mainImg = !empty($tour['HinhAnh']) ? $tour['HinhAnh'] : '../assets/images/default-tour.jpg';
                     if (!(strpos($mainImg, 'http') === 0) && strpos($mainImg, '/') !== 0) {
                         $mainImg = '/DoAn_TourDuLich/' . $mainImg;
                     }
                 ?>
-                <img src="<?php echo $mainImg; ?>" class="tour-image-main" alt="Hình ảnh tour">
+                <img src="<?php echo $mainImg; ?>" class="tour-image-main" alt="Hình ảnh tour" onerror="this.src='https://via.placeholder.com/800x400?text=Image+Not+Found'">
                 
                 <div class="content-block">
-                    <h3 class="content-title">Giới thiệu</h3>
-                    <div class="content-text">
-                        <?php echo nl2br(htmlspecialchars($tour['MoTa'])); ?>
-                    </div>
-                </div>
-
-                <div class="content-block">
-                    <h3 class="content-title">Lịch trình (Tham khảo)</h3>
-                    <div class="content-text">
-                        <p><strong>Ngày 1:</strong> Đón khách - Tham quan địa điểm A - Ăn trưa...</p>
-                        <p><strong>Ngày 2:</strong> Leo núi - Cắm trại - Tiệc nướng BBQ...</p>
-                        <p><strong>Ngày 3:</strong> Mua sắm - Tiễn sân bay.</p>
-                        <i style="color:#999;">(Dữ liệu lịch trình chi tiết sẽ được cập nhật sau )</i>
+                    <h3 class="content-title">Chi tiết Chương trình Tour</h3>
+                    <div class="content-text" style="font-size: 16px; line-height: 1.6; color:#333;">
+                        <?php echo $tour['MoTa']; ?> 
                     </div>
                 </div>
 
@@ -147,7 +137,7 @@ try {
                         $msgReview = "";
 
                         if(isset($_SESSION['user_id'])) {
-                            // Check trong CSDL: Có đơn hàng "Đã xác nhận" cho tour này không?
+                            // Chỉ cho phép đánh giá nếu đã đi tour này (Trạng thái: Đã xác nhận)
                             $checkOrder = $db->prepare("SELECT id FROM DonDatTour WHERE idNguoiDung = ? AND idTour = ? AND TrangThai = 'Đã xác nhận'");
                             $checkOrder->execute([$_SESSION['user_id'], $tour_id]);
                             
@@ -157,12 +147,12 @@ try {
                                 $msgReview = "Bạn cần đặt và hoàn thành chuyến đi này mới có thể viết đánh giá.";
                             }
                         } else {
-                            $msgReview = 'Vui lòng <a href="login.php" style="font-weight:bold; color:var(--primary-color);">Đăng nhập</a> để viết đánh giá.';
+                            $msgReview = 'Vui lòng <a href="../auth/login.php" style="font-weight:bold; color:var(--primary-color);">Đăng nhập</a> để viết đánh giá.';
                         }
                     ?>
 
                     <?php if($allowReview): ?>
-                        <form action="process/submit_review.php" method="POST" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:8px; margin-bottom:30px;">
+                        <form action="../process/submit_review.php" method="POST" style="background:#fff; border:1px solid #eee; padding:20px; border-radius:8px; margin-bottom:30px;">
                             <input type="hidden" name="tour_id" value="<?php echo $tour_id; ?>">
                             <h4 style="margin-top:0; font-size:16px;">Viết đánh giá của bạn</h4>
                             
@@ -189,7 +179,14 @@ try {
                         <?php if(count($reviews) > 0): ?>
                             <?php foreach($reviews as $rv): ?>
                                 <div class="comment-item">
-                                    <img src="<?php echo !empty($rv['Avatar']) ? $rv['Avatar'] : 'assets/images/default-user.png'; ?>" class="user-avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                                    <?php 
+                                        $uAvatar = !empty($rv['Avatar']) ? $rv['Avatar'] : '';
+                                        // Logic avatar giống header
+                                        if(empty($uAvatar)) $uAvatar = 'https://ui-avatars.com/api/?name='.urlencode($rv['TenDayDu']).'&background=random';
+                                        elseif(strpos($uAvatar, 'http')!==0 && strpos($uAvatar, '/')!==0) $uAvatar = '/DoAn_TourDuLich/uploads/avatars/'.$uAvatar;
+                                        elseif(strpos($uAvatar, 'uploads/')===0) $uAvatar = '/DoAn_TourDuLich/'.$uAvatar;
+                                    ?>
+                                    <img src="<?php echo $uAvatar; ?>" class="user-avatar">
                                     <div class="comment-content">
                                         <div class="comment-name"><?php echo htmlspecialchars($rv['TenDayDu']); ?></div>
                                         <div class="comment-stars">
@@ -243,7 +240,7 @@ try {
                             <?php if (isset($_SESSION['user_id'])): ?>
                                 <button type="submit" class="btn-primary" style="width:100%">ĐẶT TOUR NGAY</button>
                             <?php else: ?>
-                                <a href="login.php" class="btn-primary" style="display:block; text-align:center; background:#666;">
+                                <a href="../auth/login.php" class="btn-primary" style="display:block; text-align:center; background:#666;">
                                     Đăng nhập để đặt
                                 </a>
                             <?php endif; ?>

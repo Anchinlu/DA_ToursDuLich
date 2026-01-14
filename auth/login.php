@@ -4,11 +4,12 @@ require_once '../config/db_connect.php';
 
 $message = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST['username']);
+    $username = trim($_POST['username']); 
     $password = $_POST['password'];
 
     try {
-        $stmt = $db->prepare("SELECT * FROM NguoiDung WHERE TenDangNhap = :user OR GoogleID = :user"); // Cho phép nhập cả email google
+        // Tìm người dùng có TenDangNhap (Email) khớp
+        $stmt = $db->prepare("SELECT * FROM NguoiDung WHERE TenDangNhap = :user");
         $stmt->execute([':user' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -21,7 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['fullname'] = $user['TenDayDu'];
                 $_SESSION['role'] = $user['VaiTro'];
                 $_SESSION['avatar'] = $user['Avatar'];
-                // Chuyển hướng với đường dẫn tuyệt đối cho cả admin và user
+                
+                // Điều hướng
                 if ($user['VaiTro'] == 'admin') {
                     header("Location: /DoAn_TourDuLich/admin/index.php");
                 } else {
@@ -30,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
              }
         } else {
-            $message = "<div class='alert alert-error'><i class='fas fa-exclamation-circle'></i> Tên đăng nhập hoặc mật khẩu sai!</div>";
+            $message = "<div class='alert alert-error'><i class='fas fa-exclamation-circle'></i> Email hoặc mật khẩu sai!</div>";
         }
     } catch (Exception $e) { $message = "Lỗi: ".$e->getMessage(); }
 }
@@ -41,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập - Du Lịch Việt</title>
+    <title>Đăng Nhập - Chinliu Tour</title>
     <link rel="stylesheet" href="/DoAn_TourDuLich/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -78,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-wrapper">
             <div style="margin-bottom: 30px;">
                 <h3 style="color: var(--primary-color); font-weight: bold; margin-bottom: 10px;">
-                    <i class="fas fa-plane-departure"></i> Du Lịch VN
+                    <i class="fas fa-plane-departure"></i> Chinliu Tour
                 </h3>
                 <h2>Chào mừng quay lại!</h2>
                 <p class="subtitle">Đăng nhập để tiếp tục khám phá tour và ưu đãi.</p>
@@ -90,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="input-group">
                     <i class="fas fa-envelope field-icon"></i>
                     <input type="text" id="username" name="username" placeholder=" " required>
-                    <label for="username">Email hoặc Tên đăng nhập</label>
+                    <label for="username">Email đăng nhập</label>
                 </div>
 
                 <div class="input-group">

@@ -1,9 +1,9 @@
 <style>
     .main-footer {
-        background-color: #1a1a1a; /* Màu nền tối sang trọng */
-        color: #b0b0b0; /* Màu chữ xám nhạt dễ đọc */
+        background-color: #1a1a1a;
+        color: #b0b0b0; 
         padding-top: 50px;
-        margin-top: auto; /* Giúp footer tự đẩy xuống đáy nếu dùng Flexbox ở body */
+        margin-top: auto;
         font-family: system-ui, -apple-system, sans-serif;
     }
 
@@ -19,7 +19,7 @@
 
     .footer-col {
         flex: 1;
-        min-width: 250px; /* Đảm bảo không bị co quá nhỏ trên mobile */
+        min-width: 250px;
     }
 
     .footer-col h3 {
@@ -55,7 +55,7 @@
         transition: 0.3s;
     }
     .social-links a:hover {
-        background: #1877f2; /* Màu xanh khi hover */
+        background: #1877f2; 
         transform: translateY(-3px);
     }
 
@@ -76,7 +76,7 @@
     }
     .footer-links a:hover {
         color: #fff;
-        padding-left: 5px; /* Hiệu ứng đẩy nhẹ sang phải */
+        padding-left: 5px; 
     }
 
     /* Contact Info */
@@ -88,7 +88,7 @@
         font-size: 14px;
     }
     .contact-item i {
-        color: #1877f2; /* Icon màu xanh nổi bật */
+        color: #1877f2; 
         margin-top: 4px;
     }
 
@@ -154,6 +154,6 @@
     </div>
 
     <div class="footer-bottom">
-        &copy; <?php echo date("Y"); ?> <strong>ChinLiu Tour</strong>. All Rights Reserved. Designed by An Huynh.
+        &copy; <?php echo date("Y"); ?> <strong>ChinLiu Tour</strong>. All Rights Reserved. Designed by nhom da22tta.
     </div>
 </footer>

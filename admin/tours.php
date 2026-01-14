@@ -4,17 +4,15 @@
 if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id'])) {
     $id = $_GET['id'];
     try {
-        // Lấy thông tin ảnh cũ để xóa file (nếu muốn dọn dẹp sạch sẽ)
         $stmt = $db->prepare("SELECT HinhAnh FROM Tour WHERE id = ?");
         $stmt->execute([$id]);
         $tour = $stmt->fetch();
         
-        // Xóa dữ liệu trong CSDL
         $db->prepare("DELETE FROM Tour WHERE id = ?")->execute([$id]);
-        
-        // (Tùy chọn) Xóa file ảnh trong thư mục
-        if ($tour && file_exists("../" . $tour['HinhAnh'])) {
-            unlink("../" . $tour['HinhAnh']);
+        if ($tour && !empty($tour['HinhAnh'])) {
+            if (strpos($tour['HinhAnh'], 'http') !== 0 && file_exists("../" . $tour['HinhAnh'])) {
+                unlink("../" . $tour['HinhAnh']);
+            }
         }
 
         echo "<script>alert('Đã xóa tour thành công!'); window.location='tours.php';</script>";
@@ -23,8 +21,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'delete' && isset($_GET['id']))
     }
 }
 
-// --- LẤY DANH SÁCH TOUR (Kèm tên danh mục) ---
-// Sử dụng LEFT JOIN để lấy tên danh mục từ bảng DanhMuc
+// --- LẤY DANH SÁCH TOUR ---
 $sql = "SELECT t.*, d.TenDanhMuc 
         FROM Tour t 
         LEFT JOIN DanhMuc d ON t.idDanhMuc = d.id 
@@ -55,11 +52,23 @@ $tours = $stmt->fetchAll();
             <tr>
                 <td>#<?php echo $tour['id']; ?></td>
                 <td>
-                    <?php if (!empty($tour['HinhAnh'])): ?>
-                        <img src="/DoAn_TourDuLich/<?php echo $tour['HinhAnh']; ?>" width="60" height="40" style="object-fit:cover; border-radius:4px;">
-                    <?php else: ?>
-                        <span style="color:#999; font-size:12px;">No Image</span>
-                    <?php endif; ?>
+                    <?php 
+                        $imgSrc = '';
+                        if (!empty($tour['HinhAnh'])) {
+                            if (strpos($tour['HinhAnh'], 'http') === 0) {
+                                $imgSrc = $tour['HinhAnh'];
+                            } else {
+                                $imgSrc = '/DoAn_TourDuLich/' . ltrim($tour['HinhAnh'], '/');
+                            }
+                        } else {
+                            // Ảnh mặc định nếu không có ảnh
+                            $imgSrc = 'https://placehold.co/60x40?text=No+Img';
+                        }
+                    ?>
+                    <img src="<?php echo $imgSrc; ?>" 
+                         width="60" height="40" 
+                         style="object-fit:cover; border-radius:4px; border:1px solid #ddd;"
+                         onerror="this.src='https://placehold.co/60x40?text=Error'">
                 </td>
                 <td>
                     <strong><?php echo htmlspecialchars($tour['TenTour']); ?></strong>

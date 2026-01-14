@@ -8,7 +8,6 @@ $user_id = $_SESSION['user_id'];
 // --- 1. XỬ HỦY ĐƠN & YÊU CẦU HOÀN TIỀN ---
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
-    // A. Hủy đơn "Chờ xử lý" (Không cần hoàn tiền)
     if (isset($_POST['cancel_pending_id'])) {
         $oid = $_POST['cancel_pending_id'];
         $stmt = $db->prepare("UPDATE DonDatTour SET TrangThai = 'Đã hủy', LyDoHuy = 'Khách chủ động hủy khi chưa thanh toán' WHERE id = ? AND TrangThai = 'Chờ xử lý'");
@@ -16,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "<script>alert('Đã hủy đơn hàng!'); window.location='history.php';</script>";
     }
 
-    // B. Yêu cầu hoàn tiền (Cho đơn Tạm hoãn hoặc Đã xác nhận)
     if (isset($_POST['refund_order_id'])) {
         $oid = $_POST['refund_order_id'];
         $bankInfo = "Yêu cầu hoàn tiền về: " . $_POST['bank_name'] . " - STK: " . $_POST['bank_number'] . " - Chủ TK: " . $_POST['bank_user'];
